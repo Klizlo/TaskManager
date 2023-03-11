@@ -1,12 +1,12 @@
 package com.example.TaskManager.exception;
 
-public class UserNotExistsException extends RuntimeException{
+public class UserNotFoundException extends RuntimeException{
 
-    public UserNotExistsException(Long id){
+    public UserNotFoundException(Long id){
         super("User id " + id + " does not exist");
     }
 
-    public UserNotExistsException(String username) {
+    public UserNotFoundException(String username) {
         super("User " + username + " does not exist");
     }
 }

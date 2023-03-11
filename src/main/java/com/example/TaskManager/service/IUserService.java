@@ -11,6 +11,7 @@ public interface IUserService {
     User findUserByEmail(String email);
     User addUser(User user);
     User updateUser(Long id, User user);
+    User modifyUserRoles(Long userId, List<Long> roleIds);
     void deleteUser(Long id);
 
 }

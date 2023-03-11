@@ -2,7 +2,8 @@ package com.example.TaskManager.service;
 
 import com.example.TaskManager.config.TestConfig;
 import com.example.TaskManager.exception.UserAlreadyExistsException;
-import com.example.TaskManager.exception.UserNotExistsException;
+import com.example.TaskManager.exception.UserNotFoundException;
+import com.example.TaskManager.model.Role;
 import com.example.TaskManager.model.User;
 import com.example.TaskManager.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -13,9 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,6 +26,8 @@ class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private RoleService roleService;
     @Mock
     private PasswordEncoder passwordEncoder;
     @InjectMocks
@@ -83,7 +84,7 @@ class UserServiceTest {
 
         Long id = getRandomLong();
 
-        assertThrows(UserNotExistsException.class, () -> userService.findUserById(id));
+        assertThrows(UserNotFoundException.class, () -> userService.findUserById(id));
     }
 
     @Test
@@ -111,7 +112,7 @@ class UserServiceTest {
 
         when(userRepository.findByEmail(any(String.class))).thenReturn(Optional.empty());
 
-        assertThrows(UserNotExistsException.class, () -> userService.findUserByEmail(username));
+        assertThrows(UserNotFoundException.class, () -> userService.findUserByEmail(username));
 
     }
 
@@ -125,6 +126,7 @@ class UserServiceTest {
         user.setPassword("Example123");
 
         when(userRepository.save(any(User.class))).thenReturn(user);
+        when(roleService.findRoleByName("USER")).thenReturn(new Role());
 
         User addedUser = userService.addUser(user);
 
@@ -175,7 +177,7 @@ class UserServiceTest {
 
         when(userRepository.findById(any(Long.class))).thenReturn(Optional.empty());
 
-        assertThrows(UserNotExistsException.class, () -> userService.updateUser(id, user));
+        assertThrows(UserNotFoundException.class, () -> userService.updateUser(id, user));
     }
 
     @Test
@@ -193,9 +195,82 @@ class UserServiceTest {
     }
 
     @Test
+    void givenUserIdAndRoleIds_whenModifyUserRoles_returnUser() {
+
+        Role roleUser = new Role();
+        roleUser.setId(getRandomLong());
+        roleUser.setName("USER");
+
+        Role roleStaff = new Role();
+        roleStaff.setId(10+getRandomLong());
+        roleStaff.setName("STAFF");
+
+        Role roleAdmin = new Role();
+        roleAdmin.setId(20+getRandomLong());
+        roleAdmin.setName("ADMIN");
+
+        Set<Role> userRoles = new HashSet<>();
+        userRoles.add(roleUser);
+        userRoles.add(roleAdmin);
+
+        User user = new User();
+        user.setId(getRandomLong());
+        user.setUsername("Example");
+        user.setEmail("example@example.com");
+        user.setRoles(userRoles);
+
+        List<Role> newUserRoles = List.of(roleUser, roleStaff);
+
+        when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(user));
+        when(roleService.findAllRolesById(any())).thenReturn(newUserRoles);
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        User editedUser = userService.modifyUserRoles(user.getId(),
+                newUserRoles.stream().map(Role::getId).toList());
+
+        assertEquals(2, editedUser.getRoles().size());
+        assertFalse(editedUser.getRoles().contains(roleAdmin));
+        assertTrue(editedUser.getRoles().contains(roleStaff));
+    }
+
+    @Test
+    void givenUserIdAndEmptyRoleIds_whenModifyUserRoles_returnUser() {
+
+        Role roleUser = new Role();
+        roleUser.setId(getRandomLong());
+        roleUser.setName("USER");
+
+        Set<Role> userRoles = new HashSet<>();
+        userRoles.add(roleUser);
+
+        User user = new User();
+        user.setId(getRandomLong());
+        user.setUsername("Example");
+        user.setEmail("example@example.com");
+        user.setRoles(userRoles);
+
+        when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        User editedUser = userService.modifyUserRoles(user.getId(), List.of());
+
+        assertEquals(1, editedUser.getRoles().size());
+        assertTrue(editedUser.getRoles().contains(roleUser));
+    }
+
+    @Test
+    void givenNotExistingUserId_whenModifyUserRoles_throwException() {
+        when(userRepository.findById(any(Long.class))).thenReturn(Optional.empty());
+
+        Long userId = getRandomLong();
+
+        assertThrows(UserNotFoundException.class, () -> userService.modifyUserRoles(userId, List.of(getRandomLong())));
+    }
+
+    @Test
     void givenUserId_whenDeleteUser_doesNotThrowException() {
 
-    when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(new User()));
+    when(userRepository.existsById(any(Long.class))).thenReturn(true);
 
     assertDoesNotThrow(() -> userService.deleteUser(getRandomLong()));
 
@@ -204,9 +279,7 @@ class UserServiceTest {
     @Test
     void givenUserId_whenDeleteUser_throwException() {
 
-        when(userRepository.findById(any(Long.class))).thenReturn(Optional.empty());
-
-        assertThrows(UserNotExistsException.class, () -> userService.deleteUser(getRandomLong()));
+        assertThrows(UserNotFoundException.class, () -> userService.deleteUser(getRandomLong()));
 
     }
 

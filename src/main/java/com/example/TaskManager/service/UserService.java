@@ -1,23 +1,25 @@
 package com.example.TaskManager.service;
 
 import com.example.TaskManager.exception.UserAlreadyExistsException;
-import com.example.TaskManager.exception.UserNotExistsException;
+import com.example.TaskManager.exception.UserNotFoundException;
+import com.example.TaskManager.model.Role;
 import com.example.TaskManager.model.User;
 import com.example.TaskManager.repository.UserRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserService implements IUserService {
 
     private final UserRepository userRepository;
+    private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -27,12 +29,12 @@ public class UserService implements IUserService {
 
     @Override
     public User findUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new UserNotExistsException(id));
+        return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
     }
 
     @Override
     public User findUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new UserNotExistsException(email));
+        return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException(email));
     }
 
     @Override
@@ -41,6 +43,11 @@ public class UserService implements IUserService {
 
         if (userRepository.existsByEmail(user.getEmail()))
             throw new UserAlreadyExistsException(user.getEmail());
+
+        Role roleUser = roleService.findRoleByName("USER");
+
+        user.getRoles().add(roleUser);
+        roleUser.addUser(user);
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
@@ -51,8 +58,7 @@ public class UserService implements IUserService {
     @Transactional
     public User updateUser(Long id, User user) {
 
-        User foundUser = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotExistsException(id));
+        User foundUser = findUserById(id);
 
         if (userRepository.existsByEmail(user.getEmail()))
             throw new UserAlreadyExistsException(user.getEmail());
@@ -64,9 +70,34 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public User modifyUserRoles(Long userId, List<Long> roleIds) {
+
+        User user = findUserById(userId);
+
+        List<Role> roles = roleService.findAllRolesById(roleIds);
+
+        Set<Role> rolesToRevoke = user.getRoles().stream()
+                .filter(role -> !role.getName().equals("USER") && !roles.contains(role))
+                .collect(Collectors.toSet());
+        
+        rolesToRevoke.forEach(role -> role.removeUser(user));
+        user.getRoles().removeAll(rolesToRevoke);
+
+        Set<Role> rolesToAssign = roles.stream()
+                .filter(role -> !user.getRoles().contains(role))
+                .collect(Collectors.toSet());
+
+        rolesToAssign.forEach(role -> role.addUser(user));
+        user.getRoles().addAll(rolesToAssign);
+
+        return userRepository.save(user);
+    }
+
+    @Override
     @Transactional
     public void deleteUser(Long id) {
-        userRepository.findById(id).orElseThrow(() -> new UserNotExistsException(id));
+        if (!userRepository.existsById(id))
+            throw new UserNotFoundException(id);
 
         userRepository.deleteById(id);
     }
