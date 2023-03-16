@@ -24,7 +24,7 @@ class RoleServiceTest {
     @Mock
     private RoleRepository roleRepository;
     @InjectMocks
-    private RoleService roleService;
+    private com.example.TaskManager.service.RoleService roleService;
 
     @Test
     void whenFindAllRoles_returnEmptyList() {

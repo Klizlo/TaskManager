@@ -1,9 +1,9 @@
 package com.example.TaskManager.model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
@@ -27,14 +27,14 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     @NotNull(message = "Please provide username")
     String username;
     @Column(unique = true, nullable = false)
     @NotNull(message = "Please provide email")
     @Email
     String email;
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     @NotNull(message = "Please provide password")
     @Pattern(regexp = "^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&-+=()])(?=\\S+$).{8,}$",
             message = "Password must contain at least 1 capital letter, 1 number and 1 special character")
@@ -47,7 +47,7 @@ public class User {
     @LastModifiedDate
     LocalDateTime updatedAt;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
