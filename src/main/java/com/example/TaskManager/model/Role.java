@@ -1,7 +1,7 @@
 package com.example.TaskManager.model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
@@ -34,7 +34,7 @@ public class Role {
     @LastModifiedDate
     LocalDateTime updatedAt;
 
-    @ManyToMany(mappedBy = "roles")
+    @ManyToMany(mappedBy = "roles", fetch = FetchType.EAGER)
     Set<User> users = new HashSet<>();
 
     public void addUser(User user) {

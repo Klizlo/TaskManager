@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.*;
@@ -88,7 +89,36 @@ class UserServiceTest {
     }
 
     @Test
-    void givenUsername_whenFindUserByEmail_returnUser() {
+    void givenUsername_whenFindUserByUsername_returnUser() {
+
+        User user = new User();
+        user.setId(getRandomLong());
+        user.setUsername("Example");
+        user.setEmail("example@example.com");
+
+        when(userRepository.findByUsername(user.getUsername())).thenReturn(Optional.of(user));
+
+        User foundUser = userService.findUserByUsername(user.getUsername());
+
+        assertEquals(user.getUsername(), foundUser.getUsername());
+        assertEquals(user.getId(), foundUser.getId());
+        assertEquals(user.getEmail(), foundUser.getEmail());
+
+    }
+
+    @Test
+    void givenUsername_whenFindUserByUsername_throwException() {
+
+        String username = "Example";
+
+        when(userRepository.findByUsername(any(String.class))).thenReturn(Optional.empty());
+
+        assertThrows(UsernameNotFoundException.class, () -> userService.findUserByUsername(username));
+
+    }
+
+    @Test
+    void givenEmail_whenFindUserByEmail_returnUser() {
 
         User user = new User();
         user.setId(getRandomLong());
@@ -106,13 +136,13 @@ class UserServiceTest {
     }
 
     @Test
-    void givenUsername_whenFindUserByEmail_throwException() {
+    void givenEmail_whenFindUserByEmail_throwException() {
 
-        String username = "Example";
+        String email = "example@example.com";
 
         when(userRepository.findByEmail(any(String.class))).thenReturn(Optional.empty());
 
-        assertThrows(UserNotFoundException.class, () -> userService.findUserByEmail(username));
+        assertThrows(UserNotFoundException.class, () -> userService.findUserByEmail(email));
 
     }
 
@@ -148,6 +178,18 @@ class UserServiceTest {
     }
 
     @Test
+    void givenUser_whenAddUserWithExistingUsername_throwException() {
+
+        User user = new User();
+        user.setUsername("Example");
+
+        when(userRepository.existsByUsername(user.getUsername())).thenReturn(true);
+
+        assertThrows(UserAlreadyExistsException.class, () -> userService.addUser(user));
+
+    }
+
+    @Test
     void givenUser_whenUpdateUser_returnUser() {
 
         Long id = getRandomLong();
@@ -168,7 +210,7 @@ class UserServiceTest {
     }
 
     @Test
-    void givenId_whenUpdateUser_throwException() {
+    void givenId_whenUpdateUser_throwUserNotFoundException() {
         Long id = getRandomLong();
 
         User user = new User();
@@ -181,7 +223,7 @@ class UserServiceTest {
     }
 
     @Test
-    void givenUser_whenUpdateUser_throwException() {
+    void givenUserWithExistingEmail_whenUpdateUser_throwUserAlreadyExistsException() {
         Long id = getRandomLong();
 
         User user = new User();
@@ -190,6 +232,20 @@ class UserServiceTest {
 
         when(userRepository.findById(any())).thenReturn(Optional.of(new User()));
         when(userRepository.existsByEmail(user.getEmail())).thenReturn(true);
+
+        assertThrows(UserAlreadyExistsException.class, () -> userService.updateUser(id, user));
+    }
+
+    @Test
+    void givenUserWithExistingUsername_whenUpdateUser_throwUserAlreadyExistsException() {
+        Long id = getRandomLong();
+
+        User user = new User();
+        user.setUsername("Example");
+        user.setEmail("example@example.com");
+
+        when(userRepository.findById(any())).thenReturn(Optional.of(new User()));
+        when(userRepository.existsByUsername(user.getUsername())).thenReturn(true);
 
         assertThrows(UserAlreadyExistsException.class, () -> userService.updateUser(id, user));
     }
