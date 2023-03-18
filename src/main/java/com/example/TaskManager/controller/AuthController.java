@@ -6,7 +6,7 @@ import com.example.TaskManager.dto.JwtTokenDto;
 import com.example.TaskManager.dto.UserDtoMapper;
 import com.example.TaskManager.model.User;
 import com.example.TaskManager.security.JwtUtils;
-import com.example.TaskManager.service.UserService;
+import com.example.TaskManager.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,7 +22,7 @@ import javax.validation.Valid;
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class AuthController {
 
-    private final UserService userService;
+    private final IUserService userService;
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
 

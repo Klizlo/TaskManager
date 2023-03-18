@@ -42,7 +42,7 @@ public class JwtUtils implements Serializable {
     }
 
     public String getUsernameFromJwtToke(String jwt) {
-        return Jwts.parser().setSigningKey(secretKey).parseClaimsJwt(jwt)
+        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(jwt)
                 .getBody().getSubject();
     }
 
@@ -51,8 +51,8 @@ public class JwtUtils implements Serializable {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
         return Jwts.builder()
-                .setSubject(String.valueOf(userDetails.getId()))
-                .claim("username", userDetails.getUsername())
+                .setSubject(userDetails.getUsername())
+                .claim("id", userDetails.getId())
                 .claim("roles", userDetails.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.toList()))

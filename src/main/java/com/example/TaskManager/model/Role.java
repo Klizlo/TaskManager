@@ -2,6 +2,8 @@ package com.example.TaskManager.model;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
@@ -35,6 +37,7 @@ public class Role {
     LocalDateTime updatedAt;
 
     @ManyToMany(mappedBy = "roles", fetch = FetchType.EAGER)
+    @JsonIgnore
     Set<User> users = new HashSet<>();
 
     public void addUser(User user) {

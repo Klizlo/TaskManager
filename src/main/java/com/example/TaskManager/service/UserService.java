@@ -6,7 +6,6 @@ import com.example.TaskManager.model.Role;
 import com.example.TaskManager.model.User;
 import com.example.TaskManager.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +35,7 @@ public class UserService implements IUserService {
     @Override
     public User findUserByUsername(String username) {
         return userRepository.findByUsername(username).orElseThrow(
-                () -> new UsernameNotFoundException("User not found with username: " + username));
+                () -> new UserNotFoundException(username));
     }
 
     @Override
@@ -55,7 +54,7 @@ public class UserService implements IUserService {
 
         Role roleUser = roleService.findRoleByName("USER");
 
-        user.getRoles().add(roleUser);
+        user.addRole(roleUser);
         roleUser.addUser(user);
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -69,9 +68,9 @@ public class UserService implements IUserService {
 
         User foundUser = findUserById(id);
 
-        if (userRepository.existsByEmail(user.getEmail()))
+        if (!user.getEmail().equals(foundUser.getEmail()) && userRepository.existsByEmail(user.getEmail()))
             throw new UserAlreadyExistsException(user.getEmail());
-        if (userRepository.existsByUsername(user.getUsername()))
+        if (!user.getUsername().equals(foundUser.getUsername()) && userRepository.existsByUsername(user.getUsername()))
             throw new UserAlreadyExistsException(user.getUsername());
 
         foundUser.setUsername(user.getUsername());
@@ -81,6 +80,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @Transactional
     public User modifyUserRoles(Long userId, List<Long> roleIds) {
 
         User user = findUserById(userId);

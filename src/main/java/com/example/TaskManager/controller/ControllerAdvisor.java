@@ -1,6 +1,7 @@
 package com.example.TaskManager.controller;
 
 import com.example.TaskManager.exception.UserAlreadyExistsException;
+import com.example.TaskManager.exception.UserNotFoundException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -33,6 +34,15 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<?> handleUserAlreadyExists(UserAlreadyExistsException ex, WebRequest request){
+        Map<String, Object> message = new HashMap<>();
+        message.put("timestamp", LocalDateTime.now());
+        message.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<?> handleUserNotFound(UserNotFoundException ex, WebRequest request){
         Map<String, Object> message = new HashMap<>();
         message.put("timestamp", LocalDateTime.now());
         message.put("message", ex.getMessage());

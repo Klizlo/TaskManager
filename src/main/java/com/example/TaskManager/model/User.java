@@ -34,7 +34,7 @@ public class User {
     @NotNull(message = "Please provide email")
     @Email
     String email;
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     @NotNull(message = "Please provide password")
     @Pattern(regexp = "^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&-+=()])(?=\\S+$).{8,}$",
             message = "Password must contain at least 1 capital letter, 1 number and 1 special character")
@@ -52,6 +52,14 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     Set<Role> roles = new HashSet<>();
+
+    public void addRole(Role role){
+        roles.add(role);
+    }
+
+    public void removeRole(Role role){
+        roles.remove(role);
+    }
 
     @Override
     public boolean equals(Object o) {
