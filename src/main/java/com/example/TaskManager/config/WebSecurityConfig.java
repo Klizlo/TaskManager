@@ -38,7 +38,8 @@ public class WebSecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeRequests().antMatchers("/api/auth/**").permitAll().and()
                 .authorizeRequests().antMatchers("/h2-console/**").permitAll().and()
-                .authorizeRequests().antMatchers(HttpMethod.GET, "/api/users/**").permitAll()
+                .authorizeRequests().antMatchers(HttpMethod.GET, "/api/users/**").permitAll().and()
+                .authorizeRequests().antMatchers(HttpMethod.GET, "/api/roles/**").permitAll()
                 .anyRequest().authenticated();
 
         httpSecurity.authenticationProvider(authenticationProvider());

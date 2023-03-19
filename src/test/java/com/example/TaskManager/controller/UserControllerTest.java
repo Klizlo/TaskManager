@@ -52,14 +52,20 @@ public class UserControllerTest {
     @BeforeAll
     public static void addUsers(@Autowired UserRepository userRepository,
                                 @Autowired IRoleService roleService){
+
+        Role adminRole = roleService.findRoleByName("ADMIN");
+        Role userRole = roleService.findRoleByName("USER");
+
         User admin = new User();
         admin.setUsername("Admin");
         admin.setEmail("admin@example.com");
         admin.setPassword("Admin123#");
 
-        Role adminRole = roleService.findRoleByName("ADMIN");
         adminRole.addUser(admin);
         admin.addRole(adminRole);
+
+        userRole.addUser(admin);
+        admin.addRole(userRole);
 
         userRepository.save(admin);
 
@@ -67,6 +73,9 @@ public class UserControllerTest {
         user.setUsername("User");
         user.setEmail("user@example.com");
         user.setPassword("User123#");
+
+        user.addRole(userRole);
+        userRole.addUser(user);
 
         userRepository.save(user);
     }

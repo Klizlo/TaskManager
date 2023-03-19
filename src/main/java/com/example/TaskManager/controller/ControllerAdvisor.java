@@ -1,5 +1,7 @@
 package com.example.TaskManager.controller;
 
+import com.example.TaskManager.exception.RoleAlreadyExistsException;
+import com.example.TaskManager.exception.RoleNotFoundException;
 import com.example.TaskManager.exception.UserAlreadyExistsException;
 import com.example.TaskManager.exception.UserNotFoundException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -43,6 +45,24 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<?> handleUserNotFound(UserNotFoundException ex, WebRequest request){
+        Map<String, Object> message = new HashMap<>();
+        message.put("timestamp", LocalDateTime.now());
+        message.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(RoleNotFoundException.class)
+    public ResponseEntity<?> handleRoleNotFound(RoleNotFoundException ex, WebRequest request) {
+        Map<String, Object> message = new HashMap<>();
+        message.put("timestamp", LocalDateTime.now());
+        message.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(RoleAlreadyExistsException.class)
+    public ResponseEntity<?> handleRoleAlreadyExists(RoleAlreadyExistsException ex, WebRequest request) {
         Map<String, Object> message = new HashMap<>();
         message.put("timestamp", LocalDateTime.now());
         message.put("message", ex.getMessage());
