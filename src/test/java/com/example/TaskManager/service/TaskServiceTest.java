@@ -5,11 +5,16 @@ import com.example.TaskManager.exception.UserNotFoundException;
 import com.example.TaskManager.model.Task;
 import com.example.TaskManager.model.User;
 import com.example.TaskManager.repository.TaskRepository;
+import com.example.TaskManager.security.service.UserDetailsImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.List;
 import java.util.Optional;
@@ -88,11 +93,12 @@ class TaskServiceTest {
         Task task = new Task();
         task.setName("Task");
         task.setPriority(Task.Priority.LOW);
+        task.setOwner(user);
 
         when(userService.findUserById(user.getId())).thenReturn(user);
         when(taskRepository.save(any())).thenReturn(task);
 
-        Task addedTask = taskService.addTask(user.getId(), task);
+        Task addedTask = taskService.addTask(task);
 
         assertEquals(task.getName(), addedTask.getName());
         assertEquals(task.getPriority(), addedTask.getPriority());
@@ -105,27 +111,54 @@ class TaskServiceTest {
 
         Long userId = getRandomLong();
 
+        User user = new User();
+        user.setId(userId);
+
+        Task task = new Task();
+        task.setOwner(user);
+
         when(userService.findUserById(userId)).thenThrow(new UserNotFoundException(userId));
 
-        assertThrows(UserNotFoundException.class, () -> taskService.addTask(userId, new Task()));
+        assertThrows(UserNotFoundException.class, () -> taskService.addTask(task));
     }
 
     @Test
     void givenTaskIdAndTask_whenUpdateTask_returnTask() {
 
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("User");
+        user.setEmail("user@example.com");
+
         Long id = getRandomLong();
 
         Task task = new Task();
-        task.setName("New task");
+        task.setName("Task");
         task.setPriority(Task.Priority.LOW);
+        task.setOwner(user);
 
-        when(taskRepository.findById(id)).thenReturn(Optional.of(new Task()));
+        user.getTasks().add(task);
+
+        when(taskRepository.findById(id)).thenReturn(Optional.of(task));
         when(taskRepository.save(any())).thenReturn(task);
 
-        Task updatedTask = taskService.updateTask(id, task);
+        UserDetailsImpl userDetails = new UserDetailsImpl(1L, "User", "user@example.com",
+                "User123#", List.of(new SimpleGrantedAuthority("USER")));
 
-        assertEquals(task.getName(), updatedTask.getName());
-        assertEquals(task.getPriority(), updatedTask.getPriority());
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())
+        );
+
+        when(userService.findUserByUsername(any())).thenReturn(user);
+
+        Task editedTask = task;
+        editedTask.setPriority(Task.Priority.MEDIUM);
+        editedTask.setName("New task");
+
+        Task updatedTask = taskService.updateTask(id, editedTask);
+
+        assertEquals(editedTask.getName(), updatedTask.getName());
+        assertEquals(editedTask.getPriority(), updatedTask.getPriority());
     }
 
     @Test
@@ -143,11 +176,36 @@ class TaskServiceTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"USER"}, username = "User")
     void givenTaskId_whenDeleteTask_doesNotThrowException() {
+
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("User");
+        user.setEmail("user@example.com");
+
+        Long id = getRandomLong();
+
+        Task task = new Task();
+        task.setId(id);
+        task.setName("Task");
+        task.setPriority(Task.Priority.LOW);
+        task.setOwner(user);
+
+        user.getTasks().add(task);
 
         when(taskRepository.existsById(any())).thenReturn(true);
 
-        assertDoesNotThrow(() -> taskService.deleteTask(getRandomLong()));
+        UserDetailsImpl userDetails = new UserDetailsImpl(1L, "User", "user@example.com",
+                "User123#", List.of(new SimpleGrantedAuthority("USER")));
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())
+        );
+
+        when(userService.findUserByUsername(any())).thenReturn(user);
+
+        assertDoesNotThrow(() -> taskService.deleteTask(task.getId()));
     }
 
     @Test
