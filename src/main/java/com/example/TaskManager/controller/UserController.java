@@ -1,5 +1,7 @@
 package com.example.TaskManager.controller;
 
+import com.example.TaskManager.dto.TaskDto;
+import com.example.TaskManager.dto.TaskDtoMapper;
 import com.example.TaskManager.dto.UserDto;
 import com.example.TaskManager.dto.UserDtoMapper;
 import com.example.TaskManager.exception.ForbiddenException;
@@ -45,6 +47,21 @@ public class UserController {
             return UserDtoMapper.mapToUserDto(userService.findUserByEmail(userDetail));
 
         return UserDtoMapper.mapToUserDto(userService.findUserByUsername(userDetail));
+    }
+
+    @GetMapping("/users/{id}/tasks")
+    @PreAuthorize("hasAuthority('USER')")
+    public List<TaskDto> findTaskByUser(@PathVariable("id") Long id) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        User loggedUser = userService.findUserByUsername(userDetails.getUsername());
+
+        if(!loggedUser.getId().equals(id)
+                && loggedUser.getRoles().stream().map(Role::getName).noneMatch(role -> role.equals("ADMIN")))
+            throw new ForbiddenException();
+
+        return TaskDtoMapper.mapToTaskDtos(userService.findTasksByUser(id));
     }
 
     @PostMapping("/users")

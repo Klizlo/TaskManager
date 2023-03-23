@@ -3,6 +3,7 @@ package com.example.TaskManager.service;
 import com.example.TaskManager.exception.UserAlreadyExistsException;
 import com.example.TaskManager.exception.UserNotFoundException;
 import com.example.TaskManager.model.Role;
+import com.example.TaskManager.model.Task;
 import com.example.TaskManager.model.User;
 import com.example.TaskManager.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,11 @@ public class UserService implements IUserService {
     public User findUserByUsername(String username) {
         return userRepository.findByUsername(username).orElseThrow(
                 () -> new UserNotFoundException(username));
+    }
+
+    @Override
+    public List<Task> findTasksByUser(Long id) {
+        return userRepository.findTasksByUser(id);
     }
 
     @Override

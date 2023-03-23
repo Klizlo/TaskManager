@@ -4,6 +4,7 @@ import com.example.TaskManager.config.TestConfig;
 import com.example.TaskManager.exception.UserAlreadyExistsException;
 import com.example.TaskManager.exception.UserNotFoundException;
 import com.example.TaskManager.model.Role;
+import com.example.TaskManager.model.Task;
 import com.example.TaskManager.model.User;
 import com.example.TaskManager.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -132,7 +133,20 @@ class UserServiceTest {
         assertEquals(user.getEmail(), foundUser.getEmail());
         assertEquals(user.getId(), foundUser.getId());
         assertEquals(user.getUsername(), foundUser.getUsername());
+    }
 
+    @Test
+    void givenUserId_whenFindTasksByUser_returnListOfTasks() {
+        Task task = new Task();
+        task.setName("Task");
+        task.setPriority(Task.Priority.LOW);
+
+        when(userRepository.findTasksByUser(any())).thenReturn(List.of(task));
+
+        List<Task> tasks = userService.findTasksByUser(getRandomLong());
+
+        assertFalse(tasks.isEmpty());
+        assertEquals(1, tasks.size());
     }
 
     @Test

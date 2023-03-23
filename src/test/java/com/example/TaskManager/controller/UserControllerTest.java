@@ -1,11 +1,14 @@
 package com.example.TaskManager.controller;
 
 import com.example.TaskManager.dto.RoleDto;
+import com.example.TaskManager.dto.TaskDto;
 import com.example.TaskManager.dto.UserDto;
 import com.example.TaskManager.model.Role;
+import com.example.TaskManager.model.Task;
 import com.example.TaskManager.model.User;
 import com.example.TaskManager.repository.UserRepository;
 import com.example.TaskManager.service.IRoleService;
+import com.example.TaskManager.service.ITaskService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
@@ -44,6 +47,8 @@ public class UserControllerTest {
     private UserRepository userRepository;
     @Autowired
     private IRoleService roleService;
+    @Autowired
+    private ITaskService taskService;
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
@@ -101,6 +106,193 @@ public class UserControllerTest {
 
         assertThat(users.get(users.size()-1).getUsername()).isEqualTo(user.getUsername());
         assertThat(users.get(users.size()-1).getEmail()).isEqualTo(user.getEmail());
+    }
+
+    @Test
+    void givenId_whenFindUser_returnUser() throws Exception {
+        User user = new User();
+        user.setUsername("Eva");
+        user.setEmail("eva@example.com");
+        user.setPassword(passwordEncoder.encode("Eva1234#"));
+
+        User savedUser = userRepository.save(user);
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/users/" + savedUser.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        UserDto foundUser = objectMapper.readValue(mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {});
+
+        assertThat(foundUser.getId()).isEqualTo(savedUser.getId());
+        assertThat(foundUser.getUsername()).isEqualTo(savedUser.getUsername());
+        assertThat(foundUser.getEmail()).isEqualTo(savedUser.getEmail());
+    }
+
+    @Test
+    void givenUsername_whenFindUser_returnUser() throws Exception {
+        User user = new User();
+        user.setUsername("Rita");
+        user.setEmail("rita@example.com");
+        user.setPassword(passwordEncoder.encode("Rita123#"));
+
+        userRepository.save(user);
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/users/" + user.getUsername())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        UserDto foundUser = objectMapper.readValue(mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {});
+
+        assertThat(foundUser.getId()).isEqualTo(user.getId());
+        assertThat(foundUser.getUsername()).isEqualTo(user.getUsername());
+        assertThat(foundUser.getEmail()).isEqualTo(user.getEmail());
+    }
+
+    @Test
+    void givenEmail_whenFindUser_returnUser() throws Exception {
+        User user = new User();
+        user.setUsername("Alice");
+        user.setEmail("alice@example.com");
+        user.setPassword(passwordEncoder.encode("Alice123#"));
+
+        userRepository.save(user);
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/users/" + user.getEmail())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        UserDto foundUser = objectMapper.readValue(mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {});
+
+        assertThat(foundUser.getId()).isEqualTo(user.getId());
+        assertThat(foundUser.getUsername()).isEqualTo(user.getUsername());
+        assertThat(foundUser.getEmail()).isEqualTo(user.getEmail());
+    }
+
+    @Test
+    void givenId_whenFindNonExistingUser_returnStatus400() throws Exception {
+
+        mockMvc.perform(get("/api/users/" + 1_000L)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", equalTo("User id 1000 does not exist")));
+    }
+
+    @Test
+    void givenUsername_whenFindNonExistingUser_returnStatus400() throws Exception {
+
+        String username = "Caroline";
+
+        mockMvc.perform(get("/api/users/" + username)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", equalTo("User not found with: " + username)));
+    }
+
+    @Test
+    void givenEmail_whenFindNonExistingUser_returnStatus400() throws Exception {
+        String email = "alexandria@example.com";
+
+        mockMvc.perform(get("/api/users/" + email)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", equalTo("User not found with: " + email)));
+    }
+
+    @Test
+    @WithMockUser(authorities = {"USER"}, username = "Eugene")
+    void givenUserId_whenFindTasksByUser_returnListOfTask() throws Exception {
+        User user = new User();
+        user.setUsername("Eugene");
+        user.setEmail("eugene@example.com");
+        user.setPassword("Eugene123#");
+
+        User savedUser = userRepository.save(user);
+
+        Task task = new Task();
+        task.setName("Task");
+        task.setPriority(Task.Priority.MEDIUM);
+        task.setOwner(savedUser);
+
+        taskService.addTask(task);
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/users/" + savedUser.getId() + "/tasks")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        List<TaskDto> tasks = objectMapper.readValue(mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {});
+
+        assertThat(tasks.size()).isEqualTo(1);
+        assertThat(tasks.get(0).getName()).isEqualTo(task.getName());
+        assertThat(tasks.get(0).getPriority()).isEqualTo(task.getPriority());
+    }
+
+    @Test
+    @WithMockUser(authorities = {"ADMIN","USER"}, username = "Admin")
+    void givenUserId_whenFindTasksByUserByAdmin_returnListOfTask() throws Exception {
+        User user = new User();
+        user.setUsername("Paul");
+        user.setEmail("paul@example.com");
+        user.setPassword("Paul123#");
+
+        User savedUser = userRepository.save(user);
+
+        Task task = new Task();
+        task.setName("Task");
+        task.setPriority(Task.Priority.MEDIUM);
+        task.setOwner(savedUser);
+
+        taskService.addTask(task);
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/users/" + savedUser.getId() + "/tasks")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        List<TaskDto> tasks = objectMapper.readValue(mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {});
+
+        assertThat(tasks.size()).isEqualTo(1);
+        assertThat(tasks.get(0).getName()).isEqualTo(task.getName());
+        assertThat(tasks.get(0).getPriority()).isEqualTo(task.getPriority());
+    }
+
+    @Test
+    @WithMockUser(authorities = {"USER"}, username = "User")
+    void givenUserId_whenFindTasksByUserByUnauthorizedUser_returnStatus403() throws Exception {
+        User user = new User();
+        user.setUsername("Francois");
+        user.setEmail("francois@example.com");
+        user.setPassword("Francois123#");
+
+        User savedUser = userRepository.save(user);
+
+        Task task = new Task();
+        task.setName("Task");
+        task.setPriority(Task.Priority.MEDIUM);
+        task.setOwner(savedUser);
+
+        taskService.addTask(task);
+
+        mockMvc.perform(get("/api/users/" + savedUser.getId() + "/tasks")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isForbidden());
     }
 
     @Test

@@ -18,6 +18,33 @@ The application is created in:
 ## What's new
 
 <details>
+<summary>Added task management</summary>
+<br>
+The most important news:
+<li>Users can manage their tasks</li>
+<br>
+</details>
+
+<details>
+<summary>Added user and role management</summary>
+<br>
+The most important news:
+<ul>
+    <li>User management</li>
+    <ul>
+        <li>Users can manage their accounts </li>
+        <li>Administrator can modify users roles</li>
+        <li>Administrator can create new user accounts</li>
+    </ul>
+    <li>Role management</li>
+    <ul>
+        <li>Administrator can manage the roles</li>
+    </ul>
+</ul>
+<br>
+</details>
+
+<details>
 <summary>Added login and registration </summary>
 <br>
 The most important news:
