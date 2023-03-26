@@ -9,13 +9,23 @@ The application is created in:
 * Spring Boot 2.7.9
 
 ## Roadmap
-* Simple application
+* Simple application &check;
+* Adding categories to the task by users
 * Adding task history
 * Adding mail notification
 * Adding user groups and groups tasks
 * and more...
 
 ## What's new
+
+<details>
+<summary>Added MySQL connection</summary>
+<br>
+The most important news:
+<li>Application connects to a MySQL database</li>
+<li>Database is managed by Liquibase changelogs</li>
+<br>
+</details>
 
 <details>
 <summary>Added task management</summary>
