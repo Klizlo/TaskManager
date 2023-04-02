@@ -2,17 +2,22 @@ package com.example.TaskManager.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
 @Setter
 @EntityListeners(AuditingEntityListener.class)
-public class Task {
+@Table(name = "category")
+public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,29 +25,18 @@ public class Task {
     @Column(nullable = false)
     @NotNull
     private String name;
-    @Column
-    private String description;
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    @NotNull
-    private Priority priority;
-    @Column
-    private LocalDateTime deadline;
     @Column(name = "created_at", updatable = false)
+    @CreatedDate
     private LocalDateTime createdAt;
     @Column(name = "updated_at")
+    @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false)
     User owner;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "category_id")
-    Category category;
-
-    public enum Priority {
-        HIGH, MEDIUM, LOW
-    }
+    @OneToMany(mappedBy = "category")
+    List<Task> tasks = new ArrayList<>();
 
 }

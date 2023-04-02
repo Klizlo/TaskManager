@@ -76,4 +76,22 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(CategoryNotFoundException.class)
+    public ResponseEntity<?> handleCategoryNotFound(CategoryNotFoundException ex, WebRequest request) {
+        Map<String, Object> message = new HashMap<>();
+        message.put("timestamp", LocalDateTime.now());
+        message.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(CategoryAlreadyExistsException.class)
+    public ResponseEntity<?> handleCategoryAlreadyExists(CategoryAlreadyExistsException ex, WebRequest request) {
+        Map<String, Object> message = new HashMap<>();
+        message.put("timestamp", LocalDateTime.now());
+        message.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+    }
+
 }

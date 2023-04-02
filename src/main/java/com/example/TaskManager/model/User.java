@@ -53,9 +53,13 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     Set<Role> roles = new HashSet<>();
 
-    @OneToMany(mappedBy = "owner", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "owner")
     @JsonIgnore
     List<Task> tasks = new ArrayList<>();
+
+    @OneToMany(mappedBy = "owner")
+    @JsonIgnore
+    List<Category> categories = new ArrayList<>();
 
     public void addRole(Role role){
         roles.add(role);

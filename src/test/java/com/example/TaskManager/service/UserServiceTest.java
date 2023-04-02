@@ -13,7 +13,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.*;
@@ -114,7 +113,7 @@ class UserServiceTest {
 
         when(userRepository.findByUsername(any(String.class))).thenReturn(Optional.empty());
 
-        assertThrows(UsernameNotFoundException.class, () -> userService.findUserByUsername(username));
+        assertThrows(UserNotFoundException.class, () -> userService.findUserByUsername(username));
 
     }
 
