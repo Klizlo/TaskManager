@@ -3,6 +3,7 @@ package com.example.TaskManager.service;
 import com.example.TaskManager.config.TestConfig;
 import com.example.TaskManager.exception.UserAlreadyExistsException;
 import com.example.TaskManager.exception.UserNotFoundException;
+import com.example.TaskManager.model.Category;
 import com.example.TaskManager.model.Role;
 import com.example.TaskManager.model.Task;
 import com.example.TaskManager.model.User;
@@ -135,6 +136,17 @@ class UserServiceTest {
     }
 
     @Test
+    void givenEmail_whenFindUserByEmail_throwException() {
+
+        String email = "example@example.com";
+
+        when(userRepository.findByEmail(any(String.class))).thenReturn(Optional.empty());
+
+        assertThrows(UserNotFoundException.class, () -> userService.findUserByEmail(email));
+
+    }
+
+    @Test
     void givenUserId_whenFindTasksByUser_returnListOfTasks() {
         Task task = new Task();
         task.setName("Task");
@@ -149,14 +161,16 @@ class UserServiceTest {
     }
 
     @Test
-    void givenEmail_whenFindUserByEmail_throwException() {
+    void givenUserId_whenFindCategoriesByUser_returnListOfCategories() {
+        Category category = new Category();
+        category.setName("Category");
 
-        String email = "example@example.com";
+        when(userRepository.findCategoriesByUser(any())).thenReturn(List.of(category));
 
-        when(userRepository.findByEmail(any(String.class))).thenReturn(Optional.empty());
+        List<Category> categories = userService.findCategoriesByUser(getRandomLong());
 
-        assertThrows(UserNotFoundException.class, () -> userService.findUserByEmail(email));
-
+        assertFalse(categories.isEmpty());
+        assertEquals(1, categories.size());
     }
 
     @Test

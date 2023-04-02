@@ -1,12 +1,15 @@
 package com.example.TaskManager.controller;
 
+import com.example.TaskManager.dto.CategoryDto;
 import com.example.TaskManager.dto.RoleDto;
 import com.example.TaskManager.dto.TaskDto;
 import com.example.TaskManager.dto.UserDto;
+import com.example.TaskManager.model.Category;
 import com.example.TaskManager.model.Role;
 import com.example.TaskManager.model.Task;
 import com.example.TaskManager.model.User;
 import com.example.TaskManager.repository.UserRepository;
+import com.example.TaskManager.service.ICategoryService;
 import com.example.TaskManager.service.IRoleService;
 import com.example.TaskManager.service.ITaskService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -49,6 +52,8 @@ public class UserControllerTest {
     private IRoleService roleService;
     @Autowired
     private ITaskService taskService;
+    @Autowired
+    private ICategoryService categoryService;
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
@@ -212,7 +217,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(authorities = {"USER"}, username = "Eugene")
-    void givenUserId_whenFindTasksByUser_returnListOfTask() throws Exception {
+    void givenUserId_whenFindTasksByUser_returnTasks() throws Exception {
         User user = new User();
         user.setUsername("Eugene");
         user.setEmail("eugene@example.com");
@@ -243,7 +248,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(authorities = {"ADMIN","USER"}, username = "Admin")
-    void givenUserId_whenFindTasksByUserByAdmin_returnListOfTask() throws Exception {
+    void givenUserId_whenFindTasksByUserByAdmin_returnTasks() throws Exception {
         User user = new User();
         user.setUsername("Paul");
         user.setEmail("paul@example.com");
@@ -290,6 +295,86 @@ public class UserControllerTest {
         taskService.addTask(task);
 
         mockMvc.perform(get("/api/users/" + savedUser.getId() + "/tasks")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = {"USER"}, username = "Robert")
+    void givenUserId_whenFindCategoriesByUser_returnCategories() throws Exception {
+        User user = new User();
+        user.setUsername("Robert");
+        user.setEmail("robert@example.com");
+        user.setPassword("Robert123#");
+
+        User savedUser = userRepository.save(user);
+
+        Category category = new Category();
+        category.setName("Category");
+        category.setOwner(savedUser);
+
+        categoryService.addCategory(category);
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/users/" + savedUser.getId() + "/categories")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        List<CategoryDto> categories = objectMapper.readValue(mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {});
+
+        assertThat(categories.size()).isEqualTo(1);
+        assertThat(categories.get(0).getName()).isEqualTo(category.getName());
+    }
+
+    @Test
+    @WithMockUser(authorities = {"ADMIN","USER"}, username = "Admin")
+    void givenUserId_whenFindCategoriesByUserByAdmin_returnCategories() throws Exception {
+        User user = new User();
+        user.setUsername("Anthony");
+        user.setEmail("anthony@example.com");
+        user.setPassword("Anthony123#");
+
+        User savedUser = userRepository.save(user);
+
+        Category category = new Category();
+        category.setName("Category");
+        category.setOwner(savedUser);
+
+        categoryService.addCategory(category);
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/users/" + savedUser.getId() + "/categories")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        List<CategoryDto> categories = objectMapper.readValue(mvcResult.getResponse().getContentAsString(),
+                new TypeReference<>() {});
+
+        assertThat(categories.size()).isEqualTo(1);
+        assertThat(categories.get(0).getName()).isEqualTo(category.getName());
+    }
+
+    @Test
+    @WithMockUser(authorities = {"USER"}, username = "User")
+    void givenUserId_whenFindCategoriesByUserByUnauthorizedUser_returnStatus403() throws Exception {
+        User user = new User();
+        user.setUsername("Carl");
+        user.setEmail("carl@example.com");
+        user.setPassword("Carl123#");
+
+        User savedUser = userRepository.save(user);
+
+        Category category = new Category();
+        category.setName("Category");
+        category.setOwner(savedUser);
+
+        categoryService.addCategory(category);
+
+        mockMvc.perform(get("/api/users/" + savedUser.getId() + "/categories")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isForbidden());

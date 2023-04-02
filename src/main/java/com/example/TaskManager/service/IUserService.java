@@ -1,5 +1,6 @@
 package com.example.TaskManager.service;
 
+import com.example.TaskManager.model.Category;
 import com.example.TaskManager.model.Task;
 import com.example.TaskManager.model.User;
 
@@ -11,6 +12,7 @@ public interface IUserService {
     User findUserById(Long id);
     User findUserByUsername(String username);
     List<Task> findTasksByUser(Long id);
+    List<Category> findCategoriesByUser(Long id);
     User findUserByEmail(String email);
     User addUser(User user);
     User updateUser(Long id, User user);

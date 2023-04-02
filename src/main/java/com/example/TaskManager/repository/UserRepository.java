@@ -1,5 +1,6 @@
 package com.example.TaskManager.repository;
 
+import com.example.TaskManager.model.Category;
 import com.example.TaskManager.model.Task;
 import com.example.TaskManager.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,4 +23,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("select u.tasks from User u where u.id = ?1")
     List<Task> findTasksByUser(Long id);
+
+    @Query("select u.categories from User u where u.id = ?1")
+    List<Category> findCategoriesByUser(Long id);
 }

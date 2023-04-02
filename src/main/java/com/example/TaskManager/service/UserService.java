@@ -2,6 +2,7 @@ package com.example.TaskManager.service;
 
 import com.example.TaskManager.exception.UserAlreadyExistsException;
 import com.example.TaskManager.exception.UserNotFoundException;
+import com.example.TaskManager.model.Category;
 import com.example.TaskManager.model.Role;
 import com.example.TaskManager.model.Task;
 import com.example.TaskManager.model.User;
@@ -42,6 +43,11 @@ public class UserService implements IUserService {
     @Override
     public List<Task> findTasksByUser(Long id) {
         return userRepository.findTasksByUser(id);
+    }
+
+    @Override
+    public List<Category> findCategoriesByUser(Long id) {
+        return userRepository.findCategoriesByUser(id);
     }
 
     @Override
