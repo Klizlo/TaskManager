@@ -2,6 +2,7 @@ package com.example.TaskManager.service;
 
 import com.example.TaskManager.exception.ForbiddenException;
 import com.example.TaskManager.exception.TaskNotFoundException;
+import com.example.TaskManager.model.Category;
 import com.example.TaskManager.model.Role;
 import com.example.TaskManager.model.Task;
 import com.example.TaskManager.model.User;
@@ -21,6 +22,7 @@ public class TaskService implements ITaskService{
 
     private final TaskRepository taskRepository;
     private final IUserService userService;
+    private final ICategoryService categoryService;
 
     @Override
     public List<Task> findAllTasks() {
@@ -37,6 +39,15 @@ public class TaskService implements ITaskService{
     public Task addTask(Task task) {
 
         User owner = userService.findUserById(task.getOwner().getId());
+
+        if(task.getCategory() != null){
+            Category category = categoryService.findCategoryById(task.getCategory().getId());
+
+            if(!category.getOwner().getId().equals(owner.getId()))
+                throw new ForbiddenException();
+
+            task.setCategory(category);
+        }
 
         task.setOwner(owner);
 
@@ -63,6 +74,17 @@ public class TaskService implements ITaskService{
 
         if(task.getPriority() != null && !task.getPriority().equals(taskToEdit.getPriority()))
             taskToEdit.setPriority(task.getPriority());
+
+        if(task.getCategory() != null){
+            Category category = categoryService.findCategoryById(task.getCategory().getId());
+
+            if(!category.getOwner().getId().equals(taskToEdit.getOwner().getId()))
+                throw new ForbiddenException();
+
+            taskToEdit.setCategory(category);
+        } else {
+            taskToEdit.setCategory(null);
+        }
 
         taskToEdit.setDescription(task.getDescription());
         taskToEdit.setDeadline(task.getDeadline());

@@ -39,4 +39,10 @@ public class Category {
     @OneToMany(mappedBy = "category")
     List<Task> tasks = new ArrayList<>();
 
+    @PreRemove
+    private void preRemove(){
+        for(Task task : tasks)
+            task.setCategory(null);
+    }
+
 }

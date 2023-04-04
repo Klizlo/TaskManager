@@ -1,7 +1,10 @@
 package com.example.TaskManager.service;
 
+import com.example.TaskManager.exception.CategoryNotFoundException;
+import com.example.TaskManager.exception.ForbiddenException;
 import com.example.TaskManager.exception.TaskNotFoundException;
 import com.example.TaskManager.exception.UserNotFoundException;
+import com.example.TaskManager.model.Category;
 import com.example.TaskManager.model.Task;
 import com.example.TaskManager.model.User;
 import com.example.TaskManager.repository.TaskRepository;
@@ -31,6 +34,8 @@ class TaskServiceTest {
     private TaskRepository taskRepository;
     @Mock
     private UserService userService;
+    @Mock
+    private CategoryService categoryService;
     @InjectMocks
     private TaskService taskService;
 
@@ -83,7 +88,7 @@ class TaskServiceTest {
     }
 
     @Test
-    void givenUserIdAndTask_whenAddTask_returnTask() {
+    void givenTask_whenAddTask_returnTask() {
 
         User user = new User();
         user.setId(getRandomLong());
@@ -107,7 +112,7 @@ class TaskServiceTest {
     }
 
     @Test
-    void givenUserIdAndTask_whenAddTask_throwUserNotFoundException() {
+    void givenTask_whenAddTask_throwUserNotFoundException() {
 
         Long userId = getRandomLong();
 
@@ -120,6 +125,85 @@ class TaskServiceTest {
         when(userService.findUserById(userId)).thenThrow(new UserNotFoundException(userId));
 
         assertThrows(UserNotFoundException.class, () -> taskService.addTask(task));
+    }
+
+    @Test
+    void givenTaskWithCategory_whenAddCategory_returnTask() {
+        User user = new User();
+        user.setId(getRandomLong());
+
+        Category category = new Category();
+        category.setId(getRandomLong());
+        category.setName("Category");
+        category.setOwner(user);
+
+        Task task = new Task();
+        task.setName("Task");
+        task.setPriority(Task.Priority.HIGH);
+        task.setCategory(category);
+        task.setOwner(user);
+
+        when(userService.findUserById(user.getId())).thenReturn(user);
+        when(categoryService.findCategoryById(category.getId())).thenReturn(category);
+        when(taskRepository.save(any())).thenReturn(task);
+
+        Task addedTask = taskService.addTask(task);
+
+        assertEquals(task.getName(), addedTask.getName());
+        assertEquals(task.getPriority(), addedTask.getPriority());
+        assertEquals(task.getCategory(), addedTask.getCategory());
+        assertEquals(task.getOwner(), addedTask.getOwner());
+    }
+
+    @Test
+    void givenTaskWithNotExistingCategory_whenAddCategory_returnCategoryNotFoundException() {
+        User user = new User();
+        user.setId(getRandomLong());
+
+        Category category = new Category();
+        category.setId(getRandomLong());
+        category.setName("Category");
+        category.setOwner(user);
+
+        Task task = new Task();
+        task.setName("Task");
+        task.setPriority(Task.Priority.HIGH);
+        task.setCategory(category);
+        task.setOwner(user);
+
+        when(userService.findUserById(user.getId())).thenReturn(user);
+        when(categoryService.findCategoryById(category.getId()))
+                .thenThrow(new CategoryNotFoundException(category.getId()));
+
+        assertThrows(CategoryNotFoundException.class,
+                () -> taskService.addTask(task));
+    }
+
+    @Test
+    void givenTaskWithNotUserCategory_whenAddCategory_returnForbiddenExceptionException() {
+        User user = new User();
+        user.setId(getRandomLong());
+
+        User categoryOwner = new User();
+        categoryOwner.setId(getRandomLong() + 10);
+
+        Category category = new Category();
+        category.setId(getRandomLong());
+        category.setName("Category");
+        category.setOwner(categoryOwner);
+
+        Task task = new Task();
+        task.setName("Task");
+        task.setPriority(Task.Priority.HIGH);
+        task.setCategory(category);
+        task.setOwner(user);
+
+        when(userService.findUserById(user.getId())).thenReturn(user);
+        when(categoryService.findCategoryById(category.getId()))
+                .thenThrow(new ForbiddenException());
+
+        assertThrows(ForbiddenException.class,
+                () -> taskService.addTask(task));
     }
 
     @Test

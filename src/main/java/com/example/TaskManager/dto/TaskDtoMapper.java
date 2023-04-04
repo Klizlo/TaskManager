@@ -21,6 +21,8 @@ public class TaskDtoMapper {
                 .description(task.getDescription())
                 .priority(task.getPriority())
                 .deadline(task.getDeadline())
+                .category(task.getCategory() != null ?
+                        CategoryDtoMapper.mapToCategoryDto(task.getCategory()) : null)
                 .owner(UserDtoMapper.mapToUserDto(task.getOwner()))
                 .build();
     }

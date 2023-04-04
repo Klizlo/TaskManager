@@ -10,13 +10,22 @@ The application is created in:
 
 ## Roadmap
 * Simple application &check;
-* Adding categories to the task by users
+* Adding categories to the task &check;
 * Adding task history
 * Adding mail notification
 * Adding user groups and groups tasks
 * and more...
 
 ## What's new
+
+<details>
+<summary>Added categories to tasks</summary>
+<br>
+The most important news:
+<li>You can assign a category to task</li>
+<li>Added category management</li>
+<br>
+</details>
 
 <details>
 <summary>Added MySQL connection</summary>

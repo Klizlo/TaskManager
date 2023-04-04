@@ -15,6 +15,7 @@ public class TaskDto {
     private String description;
     private Task.Priority priority;
     private LocalDateTime deadline;
+    private CategoryDto category;
     private UserDto owner;
 
 }
